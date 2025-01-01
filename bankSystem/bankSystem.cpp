@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <iomanip> 
+
 using namespace std;
 const string fileName = "BanckClient.txt";
 // Show Client List 
@@ -13,6 +15,8 @@ struct ClientSt
     string phone;
     double AccountBalance;
 };
+
+
 ClientSt AddClientSt() {
     ClientSt StClient;
     cout << "Add Client to Vector" << endl;
@@ -113,22 +117,26 @@ void addNewClient(vector <ClientSt>& ClientVector) {
 }
 // update client info
 //Find Client
+
+void PrintClientCard(ClientSt Client) {
+    cout << "-------------------------------------" << endl;
+    cout << "name: ";
+    cout << Client.name << endl;
+    cout << "Account number: ";
+    cout << Client.AccountNumber << endl;
+    cout << "Balance: ";
+    cout << Client.AccountBalance << endl;
+    cout << "Phne: ";
+    cout << Client.phone << endl;
+    cout << "pinCode: ";
+    cout << Client.pinCode << endl;
+    cout << "-------------------------------------" << endl;
+}
 bool GetClientByAccountNumber(string AccountNumber,vector<ClientSt>ClientVector) {
     for (ClientSt&Client :ClientVector) {
         if (Client.AccountNumber == AccountNumber)
         {
-            cout << "-------------------------------------" << endl;
-            cout << "name: ";
-            cout << Client.name << endl;
-            cout << "Account number: ";
-            cout << Client.AccountNumber << endl;
-            cout << "Balance: ";
-            cout << Client.AccountBalance << endl;
-            cout << "Phne: ";
-            cout << Client.phone << endl;
-            cout << "pinCode: ";
-            cout << Client.pinCode << endl;
-            cout << "-------------------------------------" << endl;
+            PrintClientCard(Client);
             return true;
         }
        
@@ -249,11 +257,169 @@ enum ClientChoose
     AddNew = 2,
     Update = 3,
     Delete = 4,
-    Exit = 5
+    Transaction = 5,
+    Exit = 6
 };
 
 ClientChoose Options(int num) {   
     return static_cast<ClientChoose>(num);
+}
+enum ETranscions
+{
+    AllBalance = 1,
+    Deposit = 2,
+    withDraw = 3,
+    mainMeun = 4
+};
+short ReadShort() {
+    short num = 0;
+    cout << "Enter Your Choose" << endl;
+    cin >> num;
+    return num;
+}
+void PrintTransactions() {
+    cout << "Transactions" << endl;
+    cout << "-------------------" << endl;
+    cout << "1 - All Balance" << endl;
+    cout << "2 - Deposit" << endl;
+    cout << "3- witdraw" << endl;
+    cout << "4 - Main menu" << endl;
+}
+
+
+void AllBalancefn(vector<ClientSt>& ClientV) {
+    ClientV = loadClientFromFileToVector(fileName);
+    double sumAllBalance = 0;
+
+    cout << left << setw(20) << "Name"
+        << setw(20) << "Account Number"
+        << setw(10) << "Pin Code"
+        << setw(15) << "Phone"
+        << setw(15) << "Account Balance" << endl;
+    cout << string(80, '-') << endl; 
+
+    for (const ClientSt& Client : ClientV) {
+        cout << left << setw(20) << Client.name
+            << setw(20) << Client.AccountNumber
+            << setw(10) << Client.pinCode
+            << setw(15) << Client.phone
+            << setw(15) << fixed << setprecision(2) << Client.AccountBalance << endl;
+        sumAllBalance += Client.AccountBalance;
+    }
+
+    cout << string(80, '-') << endl; 
+    cout << "All Balance Is = " << (int)sumAllBalance << endl;
+}
+
+void DepositFn(string AccountNumber, vector <ClientSt>& ClientVector) {
+    string line;
+    string update = "yes";
+    fstream file;
+    double Balance = 0;
+    if (GetClientByAccountNumber(AccountNumber, ClientVector))
+    {
+        cout << "Do You Want Deposite Money to This recored? [yes]" << endl;
+        cin >> update;
+        if (update == "yes") {
+            file.open(fileName, ios::out);
+            for (ClientSt& client : ClientVector) {
+                if (client.AccountNumber != AccountNumber)
+                {
+                    file << StructToLine(client, "//") << endl;
+                }
+                else {
+                    cout << "Enter the Amount " << endl;
+                    cin >> Balance;
+                    client.AccountBalance = client.AccountBalance + Balance;
+                    file << StructToLine(client, "//") << endl;
+                    cout << "Deposite Done" << endl;
+                }
+            }
+        }
+        else
+        {
+            return;
+        }
+
+    }
+    else
+    {
+        cout << "there is no Client with this Account Number" << endl;
+    }
+
+}
+
+void WitardFn(string AccountNumber, vector <ClientSt>& ClientVector) {
+    string line;
+    string update = "yes";
+    fstream file;
+    double Balance = 0;
+    if (GetClientByAccountNumber(AccountNumber, ClientVector))
+    {
+        cout << "Do You Want Deposite Money to This recored? [yes]" << endl;
+        cin >> update;
+        cout << "Enter the Amount " << endl;
+        cin >> Balance;
+
+        if (update == "yes") {
+
+            file.open(fileName, ios::out);
+            for (ClientSt& client : ClientVector) {
+                if (client.AccountNumber != AccountNumber)
+                {
+                    file << StructToLine(client, "//") << endl;
+                }
+                else {
+
+                    if (Balance > client.AccountBalance)
+                    {
+                        cout << "The balance in this account less than the about you want withard" << endl;
+                        file << StructToLine(client, "//") << endl;
+                    }
+                    else {
+
+                        client.AccountBalance = client.AccountBalance - Balance;
+                        file << StructToLine(client, "//") << endl;
+                        cout << "witard Done" << endl;
+                    }
+                }
+            }
+        }
+        else
+        {
+            return;
+        }
+    }
+    else
+    {
+        cout << "there is no Client with this Account Number" << endl;
+    }
+
+}
+void TransactionFn(ETranscions TChoose, vector<ClientSt>& ClientV) {
+    string back = "no";
+        switch (TChoose)
+        {
+        case ETranscions::AllBalance:
+            system("cls");
+            AllBalancefn(ClientV);
+            break;
+        case ETranscions::Deposit:
+            system("cls");
+            DepositFn(WriteString("Write The Account Number: "), ClientV);
+            break;
+        case ETranscions::withDraw:
+            system("cls");
+            WitardFn(WriteString("Write The Account Number: "), ClientV);
+            break;
+        case ETranscions::mainMeun:
+            system("cls");
+            cout << " We Transfer You to Main Menu ,, Why you login here ?? Are You Hacker +_+ !!" << endl;
+            system("pause");
+            break;
+        default:
+            break;
+        }
 }
 void StartProject(vector<ClientSt>&ClientV) {
     string containuo = "yes";
@@ -266,7 +432,8 @@ void StartProject(vector<ClientSt>&ClientV) {
         cout << "2 - Add New Client" << endl;
         cout << "3 - UpdateClient" << endl;
         cout << "4 - DeleteClient" << endl;
-        cout << "5 - Exit" << endl;
+        cout << "5 - Transactions" << endl;
+        cout << "6 - Exit" << endl;
         cout << "--------------------------" << endl;
         cout << "WhatIs Your Chosse" << endl;
         cin >> num;
@@ -284,6 +451,10 @@ void StartProject(vector<ClientSt>&ClientV) {
             break;
         case ClientChoose::Delete:
             DeleteClient(WriteString("Write The Account Number: "), ClientV);
+            break;
+        case ClientChoose::Transaction:
+            PrintTransactions();
+            TransactionFn((ETranscions)ReadShort(), ClientV);
             break;
         case ClientChoose::Exit:
             cout << "You Exit From Bank System";
